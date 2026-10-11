@@ -2,6 +2,7 @@
     "name": "keyvanarasteh/laravel-bones",
     "description": "An X-ray for your Laravel application: explore its routes, view nodes and package skeleton in one clean dashboard.",
     "type": "library",
+    "version": "1.1.1",
     "license": "MIT",
     "keywords": [
         "laravel",
