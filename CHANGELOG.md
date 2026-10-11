@@ -4,6 +4,36 @@ All notable changes to **Laravel Bones** are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres
 to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2026-10-11
+
+### Added
+
+- **Security advisories** — the Packages tab asks Packagist (one batched request
+  per 50 packages) and, when an advisory exists, sorts affected packages to the
+  top, tints their row red, links the CVE and shows a red banner at the top of
+  the tab and Overview. `bones.packages.check_security`.
+- **Update check** — direct Composer dependencies are compared against the
+  latest release on Packagist (fetched in parallel) and flagged with a small
+  `update` badge and the newer version. `bones.packages.check_updates`.
+- Both supply-chain checks are best-effort: timeouts and failures are ignored,
+  and results cache with the rest of the skeleton.
+
+### Changed
+
+- **Views is now readable.** Views are grouped by package (your own first, open;
+  vendor packages collapsed and expandable) with a Package filter and a
+  friendly label per root. Anonymous `hash::` namespaces are resolved to their
+  real Composer package or `This app` folder, and files reached through more
+  than one root are de-duplicated. The card grid is replaced by a compact list.
+- **Packages table** shows the version as a subtitle under the package name
+  instead of its own column, with flags and description alongside.
+
+### Removed
+
+- The **Explore** tab and its curated catalogue (`PackageCatalog`, the
+  `bones.explore` config key and the docs page). It duplicated what Packages
+  already tells you.
+
 ## [1.2.2] - 2026-10-11
 
 ### Fixed

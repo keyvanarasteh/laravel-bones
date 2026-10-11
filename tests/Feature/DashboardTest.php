@@ -20,13 +20,13 @@ class DashboardTest extends TestCase
             ->assertSee('data-panel="routes"', false)
             ->assertSee('data-panel="views"', false)
             ->assertSee('data-panel="packages"', false)
-            ->assertSee('data-panel="explore"', false);
+            ->assertDontSee('data-panel="explore"', false);
     }
 
     public function test_it_serves_the_skeleton_as_json(): void
     {
         $this->getJson('/bones/data')
             ->assertOk()
-            ->assertJsonStructure(['data' => ['routes', 'views', 'packages'], 'explore']);
+            ->assertJsonStructure(['data' => ['routes', 'views', 'packages']]);
     }
 }

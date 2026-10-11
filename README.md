@@ -25,7 +25,6 @@ exactly which packages are holding the app up.
 | **Routes** | Every HTTP route: method, URI, action, middleware, domain, duplicates, dead controllers |
 | **Views** | Blade view nodes as a navigable graph: extends, includes and orphaned files |
 | **Packages** | Composer and npm dependencies, flagged as direct, dev or Laravel-aware |
-| **Explore** | A curated shelf of packages worth knowing, cross-referenced with yours |
 
 ## Requirements
 
@@ -65,7 +64,6 @@ php artisan bones:scan --only=routes --json
 - [Routes](docs/02-routes.md)
 - [View nodes](docs/03-views.md)
 - [Packages](docs/04-packages.md)
-- [Explore shelf](docs/05-explore.md)
 - [Configuration](docs/06-configuration.md)
 - [Extending: writing a probe](docs/07-extending.md)
 - [Changelog](CHANGELOG.md)

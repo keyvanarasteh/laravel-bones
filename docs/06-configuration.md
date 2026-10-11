@@ -62,3 +62,6 @@ The **Rescan** button (and `?fresh=1`) bypasses the cache.
 | Key | Default | Notes |
 | --- | --- | --- |
 | `packages.include_npm` | `true` | Also read `package.json` |
+| `packages.check_updates` | `env('BONES_PACKAGE_UPDATES', true)` | Ask Packagist for newer releases |
+| `packages.check_security` | `env('BONES_PACKAGE_SECURITY', true)` | Ask Packagist for security advisories |
+| `packages.timeout` | `env('BONES_PACKAGE_TIMEOUT', 6)` | Seconds to wait per Packagist call |

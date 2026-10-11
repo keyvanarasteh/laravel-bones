@@ -52,10 +52,6 @@
                             <span class="b-tab__count" data-count="{{ $section['key'] }}">0</span>
                         </button>
                     @endforeach
-                    <button class="b-tab" role="tab" data-tab="explore" aria-selected="false" title="Explore">
-                        <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-sparkles"></use></svg>
-                        <span>Explore</span>
-                    </button>
                 </nav>
 
                 <div class="b-actions">
@@ -94,19 +90,6 @@
                     <div data-body="{{ $section['key'] }}"></div>
                 </section>
             @endforeach
-
-            <section class="b-panel is-hidden" data-panel="explore" role="tabpanel">
-                <div class="b-toolbar">
-                    <div class="b-search">
-                        <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-search"></use></svg>
-                        <input type="search" data-search="explore" placeholder="Search the shelf…" autocomplete="off" spellcheck="false">
-                        <kbd class="b-kbd">/</kbd>
-                    </div>
-                    <div class="b-filters" data-filters="explore"></div>
-                    <div class="b-toolbar__meta" data-meta="explore"></div>
-                </div>
-                <div data-body="explore"></div>
-            </section>
         </main>
 
         <footer class="b-footer">
@@ -122,7 +105,7 @@
 
     <div class="b-toast" data-toast hidden></div>
 
-    <script type="application/json" id="bones-data">@json(['skeleton' => $skeleton, 'explore' => $explore])</script>
+    <script type="application/json" id="bones-data">@json(['skeleton' => $skeleton])</script>
     @include('bones::partials.scripts')
 </body>
 </html>

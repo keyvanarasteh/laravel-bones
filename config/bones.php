@@ -107,26 +107,17 @@ return [
 
         // Which installed packages are considered direct dependencies.
         'mark_direct' => true,
-    ],
 
-    /*
-    |--------------------------------------------------------------------------
-    | Explore
-    |--------------------------------------------------------------------------
-    |
-    | A curated shelf of packages worth knowing about. Bones cross-references
-    | these against your installed list so you can see, at a glance, what is
-    | already in play. Add your own entries with the same shape.
-    |
-    */
+        // Ask Packagist whether a newer release exists for direct Composer
+        // dependencies. Best-effort: failures are ignored and the result is
+        // cached with the rest of the skeleton.
+        'check_updates' => env('BONES_PACKAGE_UPDATES', true),
 
-    'explore' => [
-        // [
-        //     'name' => 'vendor/package',
-        //     'description' => 'What it does, in one line.',
-        //     'url' => 'https://github.com/vendor/package',
-        //     'category' => 'Testing',
-        //     'tags' => ['testing', 'quality'],
-        // ],
+        // Ask Packagist for published security advisories affecting installed
+        // packages. Best-effort, batched into one request per group of 50.
+        'check_security' => env('BONES_PACKAGE_SECURITY', true),
+
+        // Seconds to wait for each Packagist call before giving up.
+        'timeout' => env('BONES_PACKAGE_TIMEOUT', 6),
     ],
 ];

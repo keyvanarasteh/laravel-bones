@@ -10,7 +10,7 @@ use SplFileInfo;
 
 class ViewProbe implements Probe
 {
-    /** @var array<int, array{prefix: ?string, dir: string}> */
+    /** @var array<int, array{prefix: ?string, dir: string, label: string}> */
     protected array $roots = [];
 
     public function __construct(protected Filesystem $files)
@@ -66,7 +66,7 @@ class ViewProbe implements Probe
                     'name' => $name,
                     'file' => $file->getPathname(),
                     'path' => $relative,
-                    'package' => $root['prefix'],
+                    'package' => $root['label'],
                     'size' => $file->getSize(),
                     'lines' => substr_count($content, "\n") + 1,
                     'kind' => $this->kind($relative, $content),
@@ -82,7 +82,34 @@ class ViewProbe implements Probe
             }
         }
 
+        $views = $this->dedupeByFile($views);
+
         ksort($views);
+
+        return $views;
+    }
+
+    /**
+     * Overlapping roots (for example an app root and a namespace hint that
+     * points inside it) resolve the same file under more than one name. Keep
+     * the first — the app or package name is friendlier than a hash.
+     *
+     * @param  array<string, array<string, mixed>>  $views
+     * @return array<string, array<string, mixed>>
+     */
+    protected function dedupeByFile(array $views): array
+    {
+        $seen = [];
+
+        foreach ($views as $name => $view) {
+            if (isset($seen[$view['file']])) {
+                unset($views[$name]);
+
+                continue;
+            }
+
+            $seen[$view['file']] = true;
+        }
 
         return $views;
     }
@@ -157,7 +184,7 @@ class ViewProbe implements Probe
     }
 
     /**
-     * @return array<int, array{prefix: ?string, dir: string}>
+     * @return array<int, array{prefix: ?string, dir: string, label: string}>
      */
     protected function roots(): array
     {
@@ -169,12 +196,12 @@ class ViewProbe implements Probe
 
         $appViews = resource_path('views');
         if ($this->files->isDirectory($appViews)) {
-            $roots[] = ['prefix' => null, 'dir' => $appViews];
+            $roots[] = ['prefix' => null, 'dir' => $appViews, 'label' => $this->packageLabel($appViews)];
         }
 
         foreach (config('bones.views.paths', []) as $path) {
             if ($this->files->isDirectory($path)) {
-                $roots[] = ['prefix' => null, 'dir' => $path];
+                $roots[] = ['prefix' => null, 'dir' => $path, 'label' => $this->packageLabel($path)];
             }
         }
 
@@ -182,13 +209,42 @@ class ViewProbe implements Probe
             foreach ($this->namespacedHints() as $prefix => $paths) {
                 foreach ($paths as $path) {
                     if ($this->files->isDirectory($path)) {
-                        $roots[] = ['prefix' => $prefix, 'dir' => $path];
+                        $roots[] = ['prefix' => $prefix, 'dir' => $path, 'label' => $this->packageLabel($path)];
                     }
                 }
             }
         }
 
         return $this->roots = $roots;
+    }
+
+    /**
+     * A human label for a view root: the Composer package for vendor paths,
+     * "This app" (with its sub-folder) for application views, and the folder
+     * name otherwise. This turns anonymous hash namespaces into something
+     * readable.
+     */
+    protected function packageLabel(string $dir): string
+    {
+        $dir = rtrim($dir, DIRECTORY_SEPARATOR);
+        $vendor = rtrim(base_path('vendor'), DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR;
+        $views = rtrim(resource_path('views'), DIRECTORY_SEPARATOR);
+
+        if (str_starts_with($dir.DIRECTORY_SEPARATOR, $vendor)) {
+            $parts = explode(DIRECTORY_SEPARATOR, substr($dir, strlen($vendor)));
+
+            return count($parts) >= 2 ? $parts[0].'/'.$parts[1] : $parts[0];
+        }
+
+        if ($dir === $views) {
+            return 'This app';
+        }
+
+        if (str_starts_with($dir, $views.DIRECTORY_SEPARATOR)) {
+            return 'This app / '.str_replace(DIRECTORY_SEPARATOR, '/', substr($dir, strlen($views) + 1));
+        }
+
+        return basename($dir);
     }
 
     /**

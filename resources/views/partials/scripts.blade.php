@@ -4,13 +4,11 @@
 
     var payload = JSON.parse(document.getElementById('bones-data').textContent || '{}');
     var skeleton = payload.skeleton || {};
-    var explore = payload.explore || [];
 
     var state = {
         routes: { query: '', method: '', issues: false, view: 'cards' },
-        views: { query: '', kind: '', view: 'list', isolated: false },
-        packages: { query: '', ecosystem: '', direct: false, laravel: false },
-        explore: { query: '', category: '', installed: false }
+        views: { query: '', kind: '', package: '', view: 'list', isolated: false },
+        packages: { query: '', ecosystem: '', direct: false, laravel: false, insecure: false }
     };
 
     var panel = function (key) { return document.querySelector('[data-panel="' + key + '"]'); };
@@ -66,6 +64,16 @@
         area.select();
         try { document.execCommand('copy'); done(); } catch (e) { /* noop */ }
         document.body.removeChild(area);
+    }
+
+    function wireCopies(scope) {
+        scope.querySelectorAll('[data-copy]').forEach(function (button) {
+            button.addEventListener('click', function (event) {
+                event.preventDefault();
+                event.stopPropagation();
+                copy(button.dataset.copy);
+            });
+        });
     }
 
     function matches(query, fields) {
@@ -249,6 +257,13 @@
                 '<div class="b-card__meta">Every route resolves to a live controller and none are shadowed.</div></div>';
         }
 
+        if (packages.vulnerable > 0) {
+            html += '<div class="b-card b-card--issue"><div class="b-card__top">' +
+                '<span class="b-badge b-badge--bad">' + icon('warn') + ' ' + packages.advisories + ' security advis' + (packages.advisories === 1 ? 'ory' : 'ories') + '</span>' +
+                '<span class="b-card__name">open the Packages tab</span></div>' +
+                '<div class="b-card__meta">' + packages.vulnerable + ' installed package' + (packages.vulnerable === 1 ? '' : 's') + ' have published security advisories.</div></div>';
+        }
+
         html += '<h3 class="b-section-title">How to read this</h3>';
         html += '<div class="b-grid b-grid--cards">' +
             legend('route', 'Routes', 'HTTP endpoints, with method, action, middleware and health.') +
@@ -292,14 +307,7 @@
             : (state.routes.view === 'tree' ? routesTree(filtered) : '<div class="b-grid b-grid--cards">' + filtered.map(routeCard).join('') + '</div>');
 
         wireTree(body('routes'));
-
-        body('routes').querySelectorAll('[data-copy]').forEach(function (button) {
-            button.addEventListener('click', function (event) {
-                event.preventDefault();
-                event.stopPropagation();
-                copy(button.dataset.copy);
-            });
-        });
+        wireCopies(body('routes'));
     };
 
     function routeCard(route) {
@@ -411,10 +419,18 @@
         var data = (skeleton.views && skeleton.views.data) || {};
         var items = data.items || [];
         var kinds = ['layout', 'view', 'component'];
+        var packages = Array.from(new Set(items.map(function (v) { return v.package; }).filter(Boolean))).sort();
 
         var f = filters('views');
         f.innerHTML = '';
-        select('views', '<select class="b-select">' + options(kinds, state.views.kind, 'All kinds') + '</select>', function (value) {
+
+        var packageHtml = '<select class="b-select" title="Package"><option value="">All packages</option>' +
+            packages.map(function (p) {
+                return '<option value="' + esc(p) + '"' + (p === state.views.package ? ' selected' : '') + '>' + esc(p) + '</option>';
+            }).join('') + '</select>';
+        select('views', packageHtml, function (value) { state.views.package = value; refresh('views'); });
+
+        select('views', '<select class="b-select" title="Kind">' + options(kinds, state.views.kind, 'All kinds') + '</select>', function (value) {
             state.views.kind = value; refresh('views');
         });
         segmented('views', state.views.view, [
@@ -428,8 +444,9 @@
         }
 
         var filtered = items.filter(function (view) {
+            if (state.views.package && view.package !== state.views.package) { return false; }
             if (state.views.kind && view.kind !== state.views.kind) { return false; }
-            return matches(state.views.query, [view.name, view.path, (view.used_by || []).join(' ')]);
+            return matches(state.views.query, [view.name, view.path, view.package, (view.used_by || []).join(' ')]);
         });
 
         meta('views').textContent = 'Showing ' + filtered.length + ' of ' + items.length + ' views';
@@ -461,25 +478,59 @@
             return;
         }
 
-        body('views').innerHTML = '<div class="b-grid b-grid--cards">' + filtered.map(viewCard).join('') + '</div>';
+        body('views').innerHTML = viewsList(filtered);
+        wireCopies(body('views'));
+        wireGroups(body('views'));
     };
 
-    function viewCard(view) {
-        var kindBadge = { layout: 'accent', component: 'purple', view: 'ghost' }[view.kind] || 'ghost';
-        var refs = []
-            .concat((view.extends || []).map(function (n) { return '<span class="b-badge b-badge--accent b-badge--ghost">extends ' + esc(n) + '</span>'; }))
-            .concat((view.includes || []).map(function (n) { return '<span class="b-badge b-badge--good b-badge--ghost">includes ' + esc(n) + '</span>'; }));
+    function viewsList(items) {
+        var groups = {};
+        items.forEach(function (view) {
+            var key = view.package || 'Other';
+            (groups[key] = groups[key] || []).push(view);
+        });
 
-        return '<div class="b-card">' +
-            '<div class="b-card__top"><span class="b-badge b-badge--' + kindBadge + '">' + esc(view.kind) + '</span>' +
-            (view.package ? '<span class="b-badge b-badge--ghost">' + esc(view.package) + '</span>' : '') +
-            '<span class="b-card__name">' + esc(view.lines) + ' lines</span></div>' +
-            '<div class="b-card__uri">' + esc(view.name) +
-            '<button class="b-copy" data-copy="' + esc(view.name) + '" title="Copy view name">' + icon('copy') + '</button></div>' +
-            '<div class="b-card__meta"><span class="b-mono b-dim">' + esc(view.path) + '</span></div>' +
-            (refs.length ? '<div class="b-card__meta"><div class="b-badges">' + refs.join('') + '</div></div>' : '') +
-            ((view.used_by || []).length ? '<div class="b-card__meta"><span class="b-dim">used by ' + view.used_by.length + '</span></div>' : '') +
+        var searching = state.views.query !== '';
+        var keys = Object.keys(groups).sort(function (a, b) {
+            if (a === 'This app') { return -1; }
+            if (b === 'This app') { return 1; }
+            return a.localeCompare(b);
+        });
+
+        return '<div class="b-vlist">' + keys.map(function (key) {
+            var rows = groups[key];
+            var open = searching || key === 'This app';
+
+            return '<section class="b-vgroup' + (open ? ' is-open' : '') + '">' +
+                '<button type="button" class="b-vgroup__head">' +
+                icon('chevron', 'b-vgroup__chevron') +
+                '<span class="b-vgroup__name">' + esc(key) + '</span>' +
+                '<span class="b-vgroup__count">' + rows.length + '</span>' +
+                '</button>' +
+                '<div class="b-vgroup__body">' + rows.map(viewRow).join('') + '</div>' +
+                '</section>';
+        }).join('') + '</div>';
+    }
+
+    function viewRow(view) {
+        var kindBadge = { layout: 'accent', component: 'purple', view: 'ghost' }[view.kind] || 'ghost';
+        var refs = (view.extends || []).map(function (n) { return 'extends ' + n; })
+            .concat((view.includes || []).map(function (n) { return 'includes ' + n; }));
+        var used = (view.used_by || []).length;
+
+        return '<div class="b-vrow">' +
+            '<span class="b-badge b-badge--' + kindBadge + '">' + esc(view.kind) + '</span>' +
+            '<span class="b-vrow__path" title="' + esc(view.name) + '">' + esc(view.path) + '</span>' +
+            (refs.length ? '<span class="b-vrow__refs b-dim" title="' + esc(refs.join(', ')) + '">' + esc(refs.join(' · ')) + '</span>' : '') +
+            '<span class="b-vrow__meta b-dim">' + esc(view.lines) + ' ln' + (used ? ' · used ' + used : '') + '</span>' +
+            '<button class="b-copy" data-copy="' + esc(view.name) + '" title="Copy view name">' + icon('copy') + '</button>' +
             '</div>';
+    }
+
+    function wireGroups(scope) {
+        scope.querySelectorAll('.b-vgroup__head').forEach(function (head) {
+            head.addEventListener('click', function () { head.parentNode.classList.toggle('is-open'); });
+        });
     }
 
     function drawGraph(container, graph, visible) {
@@ -582,10 +633,11 @@
     renderers.packages = function () {
         var data = (skeleton.packages && skeleton.packages.data) || {};
         var items = data.items || [];
+        var summary = data.summary || {};
 
         var f = filters('packages');
         f.innerHTML = '';
-        select('packages', '<select class="b-select">' + options(['composer', 'npm'], state.packages.ecosystem, 'All sources') + '</select>', function (value) {
+        select('packages', '<select class="b-select" title="Source">' + options(['composer', 'npm'], state.packages.ecosystem, 'All sources') + '</select>', function (value) {
             state.packages.ecosystem = value; refresh('packages');
         });
         toggle('packages', 'Direct', state.packages.direct, function (value) {
@@ -594,12 +646,23 @@
         toggle('packages', 'Laravel', state.packages.laravel, function (value) {
             state.packages.laravel = value; refresh('packages');
         });
+        if (summary.vulnerable) {
+            toggle('packages', 'Insecure', state.packages.insecure, function (value) {
+                state.packages.insecure = value; refresh('packages');
+            });
+        }
 
         var filtered = items.filter(function (pkg) {
             if (state.packages.ecosystem && pkg.ecosystem !== state.packages.ecosystem) { return false; }
             if (state.packages.direct && !pkg.direct) { return false; }
             if (state.packages.laravel && !pkg.laravel) { return false; }
+            if (state.packages.insecure && !(pkg.advisories || []).length) { return false; }
             return matches(state.packages.query, [pkg.name, pkg.description, pkg.license]);
+        });
+
+        filtered = filtered.slice().sort(function (a, b) {
+            var rank = function (p) { return (p.advisories || []).length ? 0 : (p.outdated ? 1 : 2); };
+            return rank(a) - rank(b) || String(a.name).localeCompare(String(b.name));
         });
 
         meta('packages').textContent = 'Showing ' + filtered.length + ' of ' + items.length + ' packages';
@@ -609,72 +672,60 @@
             return;
         }
 
-        body('packages').innerHTML = '<div class="b-wrap"><table class="b-table"><thead><tr>' +
-            '<th>Package</th><th>Version</th><th>Source</th><th>Flags</th><th>Description</th></tr></thead><tbody>' +
+        var alert = '';
+        if (summary.vulnerable > 0) {
+            alert = '<div class="b-alert b-alert--bad">' + icon('warn') +
+                '<div><strong>' + summary.advisories + ' security advis' + (summary.advisories === 1 ? 'ory' : 'ories') + '</strong> ' +
+                'affecting ' + summary.vulnerable + ' package' + (summary.vulnerable === 1 ? '' : 's') + '. Update or replace them.</div></div>';
+        }
+
+        body('packages').innerHTML = alert + '<div class="b-wrap"><table class="b-table"><thead><tr>' +
+            '<th>Package</th><th>Flags</th><th>Description</th></tr></thead><tbody>' +
             filtered.map(packageRow).join('') + '</tbody></table></div>';
+        wireCopies(body('packages'));
     };
 
     function packageRow(pkg) {
+        var advisories = pkg.advisories || [];
         var flags = [];
         if (pkg.direct) { flags.push('<span class="b-badge b-badge--accent">direct</span>'); }
         if (pkg.dev) { flags.push('<span class="b-badge">dev</span>'); }
         if (pkg.laravel) { flags.push('<span class="b-badge b-badge--good">laravel</span>'); }
         if (pkg.abandoned) { flags.push('<span class="b-badge b-badge--bad">abandoned</span>'); }
+
+        if (advisories.length) {
+            var title = advisories.map(function (a) {
+                return (a.title || a.id || 'advisory') + (a.cve ? ' (' + a.cve + ')' : '');
+            }).join('\n');
+            flags.push('<span class="b-badge b-badge--bad" title="' + esc(title) + '">' + icon('warn') + ' ' +
+                advisories.length + ' advis' + (advisories.length === 1 ? 'ory' : 'ories') + '</span>');
+        } else if (pkg.outdated) {
+            flags.push('<span class="b-badge b-badge--warn" title="Latest ' + esc(pkg.latest || '') + '">' + icon('refresh') + ' update</span>');
+        }
+
         var name = pkg.homepage
             ? '<a href="' + esc(pkg.homepage) + '" target="_blank" rel="noopener">' + esc(pkg.name) + '</a>'
             : esc(pkg.name);
 
-        return '<tr class="b-row">' +
-            '<td class="b-mono">' + name + '</td>' +
-            '<td class="b-mono b-dim">' + esc(pkg.version) + '</td>' +
-            '<td><span class="b-badge b-badge--ghost">' + esc(pkg.ecosystem) + '</span></td>' +
-            '<td><div class="b-badges">' + (flags.join('') || '<span class="b-dim">—</span>') + '</div></td>' +
+        var version = '<span class="b-mono">' + esc(pkg.version) + '</span>' +
+            (pkg.outdated && pkg.latest
+                ? ' <span class="b-pkg__arrow">→</span> <span class="b-mono b-dim">' + esc(pkg.latest) + '</span>'
+                : '');
+
+        var advisoryLinks = advisories.length
+            ? '<div class="b-pkg__advisories">' + advisories.map(function (a) {
+                var label = esc(a.cve || a.id || 'advisory');
+                return a.link ? '<a href="' + esc(a.link) + '" target="_blank" rel="noopener">' + label + '</a>' : label;
+            }).join(' ') + '</div>'
+            : '';
+
+        var rowClass = 'b-row' + (advisories.length ? ' b-row--bad' : (pkg.outdated ? ' b-row--warn' : ''));
+
+        return '<tr class="' + rowClass + '">' +
+            '<td><div class="b-pkg"><span class="b-pkg__name">' + name + '</span>' +
+            '<span class="b-pkg__sub">' + version + '</span>' + advisoryLinks + '</div></td>' +
+            '<td><div class="b-badges">' + flags.join('') + '</div></td>' +
             '<td class="b-dim">' + esc(pkg.description || '') + '</td></tr>';
-    }
-
-    /* --------------------------------------------------------------- explore */
-
-    renderers.explore = function () {
-        var categories = Array.from(new Set(explore.map(function (item) { return item.category; }))).sort();
-
-        var f = filters('explore');
-        f.innerHTML = '';
-        select('explore', '<select class="b-select">' + options(categories, state.explore.category, 'All categories') + '</select>', function (value) {
-            state.explore.category = value; refresh('explore');
-        });
-        toggle('explore', 'Installed', state.explore.installed, function (value) {
-            state.explore.installed = value; refresh('explore');
-        });
-
-        var filtered = explore.filter(function (item) {
-            if (state.explore.category && item.category !== state.explore.category) { return false; }
-            if (state.explore.installed && !item.installed) { return false; }
-            return matches(state.explore.query, [item.name, item.description, item.category, (item.tags || []).join(' ')]);
-        });
-
-        meta('explore').textContent = 'Showing ' + filtered.length + ' of ' + explore.length + ' packages';
-
-        body('explore').innerHTML = filtered.length === 0
-            ? empty('Nothing on the shelf matches.')
-            : '<div class="b-grid b-grid--cards">' + filtered.map(exploreCard).join('') + '</div>';
-    };
-
-    function exploreCard(item) {
-        var tags = (item.tags || []).map(function (tag) {
-            return '<span class="b-badge b-badge--ghost">' + esc(tag) + '</span>';
-        }).join('');
-        return '<div class="b-card">' +
-            '<div class="b-card__top">' +
-            '<span class="b-badge b-badge--ghost">' + esc(item.category) + '</span>' +
-            (item.installed
-                ? '<span class="b-badge b-badge--good">installed ' + esc(item.installed_version || '') + '</span>'
-                : '<span class="b-badge">not installed</span>') +
-            '</div>' +
-            '<div class="b-card__uri">' + esc(item.name) +
-            '<a href="' + esc(item.url) + '" target="_blank" rel="noopener" class="b-copy" title="Open homepage">' + icon('external') + '</a></div>' +
-            '<div class="b-card__meta">' + esc(item.description) + '</div>' +
-            '<div class="b-card__meta"><div class="b-badges">' + tags + '</div></div>' +
-            '</div>';
     }
 
     /* ------------------------------------------------------------------ boot */

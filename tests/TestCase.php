@@ -7,6 +7,15 @@ use Orchestra\Testbench\TestCase as Orchestra;
 
 abstract class TestCase extends Orchestra
 {
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        // Never reach out to Packagist from the test suite.
+        config()->set('bones.packages.check_updates', false);
+        config()->set('bones.packages.check_security', false);
+    }
+
     protected function getPackageProviders($app): array
     {
         return [BonesServiceProvider::class];

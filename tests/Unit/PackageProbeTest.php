@@ -3,6 +3,7 @@
 namespace Keyvanarasteh\LaravelBones\Tests\Unit;
 
 use Illuminate\Filesystem\Filesystem;
+use Illuminate\Support\Facades\Http;
 use Keyvanarasteh\LaravelBones\Probes\PackageProbe;
 use Keyvanarasteh\LaravelBones\Tests\TestCase;
 
@@ -93,5 +94,37 @@ class PackageProbeTest extends TestCase
         $this->assertTrue($items['phpunit/phpunit']['dev']);
         $this->assertSame('MIT', $items['illuminate/support']['license']);
         $this->assertSame('vue', $items['vue']['name']);
+    }
+
+    public function test_it_reports_security_advisories_and_updates(): void
+    {
+        config()->set('bones.packages.check_security', true);
+        config()->set('bones.packages.check_updates', true);
+
+        Http::fake([
+            'packagist.org/api/security-advisories/*' => Http::response(['advisories' => [
+                'illuminate/support' => [[
+                    'advisoryId' => 'PKSA-1',
+                    'title' => 'Something dangerous',
+                    'cve' => 'CVE-2024-0001',
+                    'link' => 'https://example.com/advisory',
+                    'severity' => 'high',
+                ]],
+            ]], 200),
+            'repo.packagist.org/p2/illuminate/support.json' => Http::response(['packages' => [
+                'illuminate/support' => [['version' => 'v11.5.0'], ['version' => 'v11.0.0']],
+            ]], 200),
+            '*' => Http::response(['packages' => []], 200),
+        ]);
+
+        $data = $this->probe()->scan();
+        $items = collect($data['items'])->keyBy('name');
+
+        $this->assertSame('high', $items['illuminate/support']['severity']);
+        $this->assertSame('11.5.0', $items['illuminate/support']['latest']);
+        $this->assertTrue($items['illuminate/support']['outdated']);
+        $this->assertFalse($items['phpunit/phpunit']['outdated']);
+        $this->assertSame(1, $data['summary']['vulnerable']);
+        $this->assertSame(1, $data['summary']['outdated']);
     }
 }

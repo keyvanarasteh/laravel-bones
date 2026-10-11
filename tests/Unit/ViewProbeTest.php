@@ -70,4 +70,38 @@ class ViewProbeTest extends TestCase
         $this->assertNotEmpty($graph['edges']);
         $this->assertContains('layout', collect($graph['edges'])->pluck('to'));
     }
+
+    public function test_it_labels_roots_with_readable_packages(): void
+    {
+        $probe = new class($this->app->make(\Illuminate\Filesystem\Filesystem::class)) extends ViewProbe {
+            public function labelFor(string $dir): string
+            {
+                return $this->packageLabel($dir);
+            }
+        };
+
+        $this->assertSame('This app', $probe->labelFor(resource_path('views')));
+        $this->assertSame('This app / components', $probe->labelFor(resource_path('views').'/components'));
+        $this->assertSame('laravel/pulse', $probe->labelFor(base_path('vendor').'/laravel/pulse/resources/views'));
+    }
+
+    public function test_it_dedupes_files_scanned_by_overlapping_roots(): void
+    {
+        $probe = new class($this->app->make(\Illuminate\Filesystem\Filesystem::class)) extends ViewProbe {
+            public function dedupe(array $views): array
+            {
+                return $this->dedupeByFile($views);
+            }
+        };
+
+        $result = $probe->dedupe([
+            'components.badge' => ['file' => '/x/components/badge.blade.php'],
+            '769f78de24e690582fef2e288e17e70e::badge' => ['file' => '/x/components/badge.blade.php'],
+            'home' => ['file' => '/x/home.blade.php'],
+        ]);
+
+        $this->assertArrayHasKey('components.badge', $result);
+        $this->assertArrayNotHasKey('769f78de24e690582fef2e288e17e70e::badge', $result);
+        $this->assertArrayHasKey('home', $result);
+    }
 }
