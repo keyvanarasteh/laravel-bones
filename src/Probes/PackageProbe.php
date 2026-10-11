@@ -77,12 +77,15 @@ class PackageProbe implements Probe
         }
 
         if ($items !== [] && config('bones.packages.check_updates', true)) {
-            $direct = array_values(array_filter(
+            // Direct dependencies, plus any package carrying an advisory — so a
+            // vulnerable transitive dependency still shows its fixed version.
+            $targets = array_values(array_filter(
                 $items,
-                fn (array $package) => $package['ecosystem'] === 'composer' && $package['direct']
+                fn (array $package) => $package['ecosystem'] === 'composer'
+                    && ($package['direct'] || ! empty($package['advisories']))
             ));
 
-            foreach ($this->latestVersions($direct) as $name => $latest) {
+            foreach ($this->latestVersions($targets) as $name => $latest) {
                 if (isset($index[$name])) {
                     $items[$index[$name]]['latest'] = $latest;
                 }
@@ -225,7 +228,7 @@ class PackageProbe implements Probe
      */
     protected function severity(array $advisories): ?string
     {
-        $rank = ['low' => 1, 'moderate' => 2, 'high' => 3, 'critical' => 4];
+        $rank = ['low' => 1, 'medium' => 2, 'moderate' => 2, 'high' => 3, 'critical' => 4];
         $max = null;
 
         foreach ($advisories as $advisory) {

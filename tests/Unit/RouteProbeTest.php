@@ -82,6 +82,20 @@ class RouteProbeTest extends TestCase
         $this->assertSame('real.name', $items->firstWhere('uri', 'named')['name']);
     }
 
+    public function test_it_ignores_shadow_warnings_for_configured_patterns(): void
+    {
+        config()->set('bones.routes.shadow_ignore', ['livewire-*']);
+
+        $router = $this->app->make(Router::class);
+        $router->get('livewire-abc/css/{component}.css', fn () => 'a');
+        $router->get('livewire-abc/css/{component}.global.css', fn () => 'b');
+
+        $route = collect($this->probe()->scan()['items'])
+            ->firstWhere('uri', 'livewire-abc/css/{component}.global.css');
+
+        $this->assertTrue($route['health']['ok']);
+    }
+
     public function test_it_hides_sensitive_routes(): void
     {
         config()->set('bones.routes.hide_sensitive', true);

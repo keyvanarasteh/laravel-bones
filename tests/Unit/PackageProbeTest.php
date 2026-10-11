@@ -109,7 +109,7 @@ class PackageProbeTest extends TestCase
                         'title' => 'Something dangerous',
                         'cve' => 'CVE-2024-0001',
                         'link' => 'https://example.com/advisory',
-                        'severity' => 'high',
+                        'severity' => 'medium',
                         'affectedVersions' => '>=11.0,<11.4',
                     ],
                     [
@@ -120,9 +120,19 @@ class PackageProbeTest extends TestCase
                         'affectedVersions' => '>=11.6',
                     ],
                 ],
+                'phpunit/phpunit' => [[
+                    'advisoryId' => 'PKSA-9',
+                    'title' => 'Transitive dependency advisory',
+                    'cve' => 'CVE-2024-5555',
+                    'severity' => 'critical',
+                    'affectedVersions' => '>=11.0',
+                ]],
             ]], 200),
             'repo.packagist.org/p2/illuminate/support.json' => Http::response(['packages' => [
                 'illuminate/support' => [['version' => 'v11.5.0'], ['version' => 'v11.0.0']],
+            ]], 200),
+            'repo.packagist.org/p2/phpunit/phpunit.json' => Http::response(['packages' => [
+                'phpunit/phpunit' => [['version' => 'v11.2.0'], ['version' => 'v11.0.0']],
             ]], 200),
             '*' => Http::response(['packages' => []], 200),
         ]);
@@ -130,13 +140,19 @@ class PackageProbeTest extends TestCase
         $data = $this->probe()->scan();
         $items = collect($data['items'])->keyBy('name');
 
-        $this->assertSame('high', $items['illuminate/support']['severity']);
+        $this->assertSame('medium', $items['illuminate/support']['severity']);
         $this->assertCount(1, $items['illuminate/support']['advisories']);
         $this->assertSame('PKSA-1', $items['illuminate/support']['advisories'][0]['id']);
         $this->assertSame('11.5.0', $items['illuminate/support']['latest']);
         $this->assertTrue($items['illuminate/support']['outdated']);
-        $this->assertFalse($items['phpunit/phpunit']['outdated']);
-        $this->assertSame(1, $data['summary']['vulnerable']);
-        $this->assertSame(1, $data['summary']['outdated']);
+
+        // A transitive (non-direct) package with an advisory still gets its
+        // fixed version checked.
+        $this->assertCount(1, $items['phpunit/phpunit']['advisories']);
+        $this->assertSame('11.2.0', $items['phpunit/phpunit']['latest']);
+        $this->assertTrue($items['phpunit/phpunit']['outdated']);
+
+        $this->assertSame(2, $data['summary']['vulnerable']);
+        $this->assertSame(2, $data['summary']['outdated']);
     }
 }

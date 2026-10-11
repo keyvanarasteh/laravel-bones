@@ -49,6 +49,7 @@ The **Rescan** button (and `?fresh=1`) bypasses the cache.
 | --- | --- | --- |
 | `routes.hide_sensitive` | `true` | Hide matches from the dashboard |
 | `routes.sensitive_patterns` | telescope, horizon, … | `fnmatch` patterns |
+| `routes.shadow_ignore` | `['livewire-*']` | Skip wildcard-shadow warnings for these URIs |
 
 ## Views
 

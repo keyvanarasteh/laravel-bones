@@ -79,6 +79,13 @@ return [
             '_ignition*',
             'sanctum/csrf-cookie',
         ],
+
+        // Wildcard-shadow warnings are skipped for routes matching these
+        // patterns. Framework internals file their own routes in an order that
+        // trips the check without anything you can act on.
+        'shadow_ignore' => [
+            'livewire-*',
+        ],
     ],
 
     /*

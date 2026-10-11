@@ -4,6 +4,23 @@ All notable changes to **Laravel Bones** are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres
 to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.2] - 2026-10-11
+
+### Fixed
+
+- **`medium` advisories are recognised** — Packagist reports severity as
+  `medium`, which the severity ranking did not know, so those advisories lost
+  their level.
+- **A vulnerable transitive dependency now shows its fixed version.** Update
+  checks ran only for direct dependencies, so a flagged package with no newer
+  row could not tell you how to fix it. Any package carrying an advisory is now
+  checked too (so `enshrined/svg-sanitize 0.22.0` shows `→ 1.0.0`).
+- **Framework route-shadow noise is silenced.** Livewire registers its own
+  `livewire-*` file routes in an order that trips the wildcard-shadow check with
+  nothing the app can act on. Those are ignored by default
+  (`bones.routes.shadow_ignore`).
+- Corrected "1 installed package have…" to "has…".
+
 ## [1.3.1] - 2026-10-11
 
 ### Fixed

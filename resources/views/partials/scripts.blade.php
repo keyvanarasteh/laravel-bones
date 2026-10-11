@@ -261,7 +261,7 @@
             html += '<div class="b-card b-card--issue"><div class="b-card__top">' +
                 '<span class="b-badge b-badge--bad">' + icon('warn') + ' ' + packages.advisories + ' security advis' + (packages.advisories === 1 ? 'ory' : 'ories') + '</span>' +
                 '<span class="b-card__name">open the Packages tab</span></div>' +
-                '<div class="b-card__meta">' + packages.vulnerable + ' installed package' + (packages.vulnerable === 1 ? '' : 's') + ' have published security advisories.</div></div>';
+                '<div class="b-card__meta">' + packages.vulnerable + ' installed package' + (packages.vulnerable === 1 ? '' : 's') + ' ' + (packages.vulnerable === 1 ? 'has' : 'have') + ' published security advisories.</div></div>';
         }
 
         html += '<h3 class="b-section-title">How to read this</h3>';

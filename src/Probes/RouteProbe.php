@@ -173,24 +173,30 @@ class RouteProbe implements Probe
         foreach ($items as $index => $route) {
             $issues = $this->healthCheck($route);
 
-            for ($earlier = 0; $earlier < $index; $earlier++) {
-                $candidate = $patterns[$earlier];
+            if (! $this->ignoreShadow($route['uri'])) {
+                for ($earlier = 0; $earlier < $index; $earlier++) {
+                    $candidate = $patterns[$earlier];
 
-                if ($candidate['uri'] === $route['uri']) {
-                    continue;
-                }
+                    if ($candidate['uri'] === $route['uri']) {
+                        continue;
+                    }
 
-                if (array_intersect($candidate['methods'], $route['methods']) === []) {
-                    continue;
-                }
+                    if (array_intersect($candidate['methods'], $route['methods']) === []) {
+                        continue;
+                    }
 
-                if (preg_match($candidate['regex'], $route['uri'])) {
-                    $issues[] = sprintf(
-                        'Shadowed by an earlier %s route matching [%s].',
-                        implode('|', $candidate['methods']),
-                        $candidate['uri'],
-                    );
-                    break;
+                    if ($this->ignoreShadow($candidate['uri'])) {
+                        continue;
+                    }
+
+                    if (preg_match($candidate['regex'], $route['uri'])) {
+                        $issues[] = sprintf(
+                            'Shadowed by an earlier %s route matching [%s].',
+                            implode('|', $candidate['methods']),
+                            $candidate['uri'],
+                        );
+                        break;
+                    }
                 }
             }
 
@@ -201,6 +207,21 @@ class RouteProbe implements Probe
         }
 
         return $items;
+    }
+
+    /**
+     * Framework internals register their own files in an order that can look
+     * shadowed without anything the application can act on.
+     */
+    protected function ignoreShadow(string $uri): bool
+    {
+        foreach (config('bones.routes.shadow_ignore', []) as $pattern) {
+            if (fnmatch($pattern, $uri) || fnmatch($pattern.'/*', $uri)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
