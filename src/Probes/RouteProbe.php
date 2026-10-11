@@ -66,7 +66,7 @@ class RouteProbe implements Probe
         return [
             'id' => substr(md5($route->uri().'|'.implode(',', $route->methods())), 0, 12),
             'uri' => $route->uri(),
-            'name' => $route->getName(),
+            'name' => $this->routeName($route->getName()),
             'methods' => array_values(array_diff($route->methods(), ['HEAD'])),
             'action' => $parsed,
             'middleware' => $middleware,
@@ -78,6 +78,19 @@ class RouteProbe implements Probe
             'wheres' => $route->wheres ?: [],
             'is_closure' => $parsed['type'] === 'closure',
         ];
+    }
+
+    /**
+     * A route-cached application assigns unnamed routes a random
+     * "generated::<hash>" placeholder. It is noise, so treat it as unnamed.
+     */
+    protected function routeName(?string $name): ?string
+    {
+        if ($name === null || $name === '' || str_starts_with($name, 'generated::')) {
+            return null;
+        }
+
+        return $name;
     }
 
     /**

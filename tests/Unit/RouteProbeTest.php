@@ -70,6 +70,18 @@ class RouteProbeTest extends TestCase
         $this->assertNull($parsed['full']);
     }
 
+    public function test_it_hides_generated_route_names(): void
+    {
+        $router = $this->app->make(Router::class);
+        $router->get('cached-unnamed', fn () => 'ok')->name('generated::8oYqRFMm00XXTtks');
+        $router->get('named', fn () => 'ok')->name('real.name');
+
+        $items = collect($this->probe()->scan()['items']);
+
+        $this->assertNull($items->firstWhere('uri', 'cached-unnamed')['name']);
+        $this->assertSame('real.name', $items->firstWhere('uri', 'named')['name']);
+    }
+
     public function test_it_hides_sensitive_routes(): void
     {
         config()->set('bones.routes.hide_sensitive', true);

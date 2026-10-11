@@ -360,7 +360,7 @@
         var unhealthy = route.health && !route.health.ok;
         return '<div class="b-route' + (unhealthy ? ' b-route--issue' : '') + '">' +
             '<span class="b-badges">' + methodBadges(route.methods) + '</span>' +
-            '<span class="b-route__name">' + esc(route.name || '/' + route.uri) + '</span>' +
+            (route.name ? '<span class="b-route__name">' + esc(route.name) + '</span>' : '<span class="b-route__name b-dim">unnamed</span>') +
             '<code class="b-route__action">' + esc(route.action.full || 'Closure') + '</code>' +
             (unhealthy ? '<span class="b-route__warn" title="' + esc((route.health.issues || []).join(' ')) + '">' + icon('warn') + '</span>' : '') +
             '<button class="b-copy" data-copy="/' + esc(route.uri) + '" title="Copy route">' + icon('copy') + '</button>' +
