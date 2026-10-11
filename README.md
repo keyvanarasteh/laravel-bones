@@ -65,6 +65,7 @@ php artisan bones:scan --only=routes --json
 - [Explore shelf](docs/05-explore.md)
 - [Configuration](docs/06-configuration.md)
 - [Extending: writing a probe](docs/07-extending.md)
+- [Changelog](CHANGELOG.md)
 
 ## Contributing
 
