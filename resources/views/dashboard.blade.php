@@ -6,6 +6,33 @@
     <meta name="robots" content="noindex, nofollow">
     <title>Laravel Bones</title>
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <script>
+        (function() {
+            var html = document.documentElement;
+            var savedTheme = localStorage.getItem('bones-theme');
+            var themeToggle = document.getElementById('theme-toggle');
+            
+            function updateTheme(theme) {
+                html.setAttribute('data-theme', theme);
+                localStorage.setItem('bones-theme', theme);
+            }
+            
+            if (!savedTheme) {
+                var prefersLight = window.matchMedia('(prefers-color-scheme: light)').matches;
+                updateTheme(prefersLight ? 'light' : 'dark');
+            } else {
+                updateTheme(savedTheme);
+            }
+            
+            if (themeToggle) {
+                themeToggle.addEventListener('click', function() {
+                    var current = html.getAttribute('data-theme');
+                    var next = current === 'dark' ? 'light' : 'dark';
+                    updateTheme(next);
+                });
+            }
+        })();
+    </script>
     @include('bones::partials.styles')
 </head>
 <body>
@@ -43,16 +70,25 @@
                     </button>
                 </nav>
 
-                <div class="bones-actions">
-                    <a class="bones-btn bones-btn--ghost" href="{{ route('bones.data') }}" target="_blank" rel="noopener">
-                        <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-code"></use></svg>
-                        JSON
-                    </a>
-                    <a class="bones-btn bones-btn--primary" href="?fresh=1">
-                        <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-refresh"></use></svg>
-                        Rescan
-                    </a>
-                </div>
+                 <div class="bones-actions">
+                     <a class="bones-btn bones-btn--ghost" href="{{ route('bones.data') }}" target="_blank" rel="noopener">
+                         <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-code"></use></svg>
+                         JSON
+                     </a>
+                     <button class="bones-btn" id="theme-toggle" type="button">
+                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                             <circle cx="12" cy="12" r="5"/>
+                             <line x1="12" y1="1" x2="12" y2="3"/>
+                             <line x1="12" y1="21" x2="12" y2="23"/>
+                             <line x1="4" y1="12" x2="20" y2="12"/>
+                         </svg>
+                         Theme
+                     </button>
+                     <a class="bones-btn bones-btn--primary" href="?fresh=1">
+                         <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-refresh"></use></svg>
+                         Rescan
+                     </a>
+                 </div>
             </div>
         </header>
 

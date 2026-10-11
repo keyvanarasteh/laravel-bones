@@ -22,7 +22,69 @@
     --shadow: 0 18px 40px -24px rgba(0, 0, 0, .9);
     --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
     --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, Helvetica, Arial, sans-serif;
-    color-scheme: dark;
+    color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: light) {
+    :root:not([data-theme="dark"]) {
+        --bg: #f8fafc;
+        --bg-glow: radial-gradient(900px 480px at 12% -12%, rgba(59, 130, 246, .08), transparent 60%),
+                    radial-gradient(800px 420px at 100% 0%, rgba(16, 185, 129, .06), transparent 55%);
+        --surface: #f1f5f9;
+        --surface-2: #e2e8f0;
+        --surface-3: #cbd5e1;
+        --border: #94a3b8;
+        --border-soft: #d0d9e5;
+        --text: #0f172a;
+        --muted: #64748b;
+        --faint: #94a3b7;
+        --accent: #3b82f6;
+        --accent-strong: #2563eb;
+        --accent-soft: rgba(59, 130, 246, .12);
+        --good: #059669;
+        --warn: #d97706;
+        --bad: #dc2626;
+    }
+}
+
+[data-theme="dark"] {
+    --bg: #0a0e14;
+    --bg-glow: radial-gradient(900px 480px at 12% -12%, rgba(59, 130, 246, .16), transparent 60%),
+                radial-gradient(800px 420px at 100% 0%, rgba(16, 185, 129, .10), transparent 55%);
+    --surface: #0f1620;
+    --surface-2: #131d2b;
+    --surface-3: #172232;
+    --border: #223044;
+    --border-soft: #1a2534;
+    --text: #e6edf6;
+    --muted: #94a6bd;
+    --faint: #64748b;
+    --accent: #3b82f6;
+    --accent-strong: #2563eb;
+    --accent-soft: rgba(59, 130, 246, .14);
+    --good: #10b981;
+    --warn: #f59e0b;
+    --bad: #ef4444;
+}
+
+[data-theme="light"] {
+    --bg: #f8fafc;
+    --bg-glow: radial-gradient(900px 480px at 12% -12%, rgba(59, 130, 246, .08), transparent 60%),
+                radial-gradient(800px 420px at 100% 0%, rgba(16, 185, 129, .06), transparent 55%);
+    --surface: #f1f5f9;
+    --surface-2: #e2e8f0;
+    --surface-3: #cbd5e1;
+    --border: #94a3b8;
+    --border-soft: #d0d9e5;
+    --text: #0f172a;
+    --muted: #64748b;
+    --faint: #94a3b7;
+    --accent: #3b82f6;
+    --accent-strong: #2563eb;
+    --accent-soft: rgba(59, 130, 246, .12);
+    --good: #059669;
+    --warn: #d97706;
+    --bad: #dc2626;
 }
 
 * { box-sizing: border-box; }
