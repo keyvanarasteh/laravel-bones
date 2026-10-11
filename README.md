@@ -26,7 +26,7 @@ exactly which packages are holding the app up.
 
 ## Requirements
 
-- PHP 8.1+
+- PHP 8.2+
 - Laravel 10, 11 or 12
 
 ## Installation
