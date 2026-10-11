@@ -7,8 +7,18 @@ Published with `php artisan bones:install` to `config/bones.php`.
 | Key | Default | Notes |
 | --- | --- | --- |
 | `enabled` | `env('BONES_ENABLED', false)` | Master switch |
-| `route_prefix` | `bones` | Where the dashboard lives |
-| `middleware` | `['web']` | Add `auth` or your own guard |
+| `route_prefix` | `env('BONES_ROUTE_PREFIX', 'bones')` | Where the dashboard lives |
+| `middleware` | `env('BONES_MIDDLEWARE', 'web')` | Comma-separated; add `auth` or your own guard |
+
+The `middleware` and `route_prefix` values can be set without publishing config:
+
+```env
+BONES_ROUTE_PREFIX=api/bones
+BONES_MIDDLEWARE=web,auth
+```
+
+This is how Bones is gated when it is enabled somewhere other than local — for
+example behind an existing admin session: `BONES_MIDDLEWARE=web,my.admin.gate`.
 
 ## Probes
 
