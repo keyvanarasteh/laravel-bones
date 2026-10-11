@@ -3,7 +3,7 @@
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/keyvanarasteh/laravel-bones.svg?style=flat-square)](https://packagist.org/packages/keyvanarasteh/laravel-bones)
 [![Total Downloads](https://img.shields.io/packagist/dt/keyvanarasteh/laravel-bones.svg?style=flat-square)](https://packagist.org/packages/keyvanarasteh/laravel-bones)
 [![PHP Version](https://img.shields.io/packagist/php-v/keyvanarasteh/laravel-bones.svg?style=flat-square)](https://packagist.org/packages/keyvanarasteh/laravel-bones)
-[![Laravel](https://img.shields.io/badge/laravel-10%20%7C%2011%20%7C%2012-FF2D20?style=flat-square&logo=laravel&logoColor=white)](#requirements)
+[![Laravel](https://img.shields.io/badge/laravel-10%20%7C%2011%20%7C%2012%20%7C%2013-FF2D20?style=flat-square&logo=laravel&logoColor=white)](#requirements)
 [![Tests](https://img.shields.io/github/actions/workflow/status/keyvanarasteh/laravel-bones/tests.yml?label=tests&style=flat-square)](https://github.com/keyvanarasteh/laravel-bones/actions)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)](LICENSE.md)
 
@@ -27,7 +27,7 @@ exactly which packages are holding the app up.
 ## Requirements
 
 - PHP 8.2+
-- Laravel 10, 11 or 12
+- Laravel 10, 11, 12 or 13
 
 ## Installation
 
