@@ -8,7 +8,7 @@
 
     var state = {
         routes: { query: '', method: '', issues: false, view: 'cards' },
-        views: { query: '', kind: '', view: 'list' },
+        views: { query: '', kind: '', view: 'list', isolated: false },
         packages: { query: '', ecosystem: '', direct: false, laravel: false },
         explore: { query: '', category: '', installed: false }
     };
@@ -285,7 +285,7 @@
             return matches(state.routes.query, [route.uri, route.name, route.action.full, (route.middleware || []).join(' ')]);
         });
 
-        meta('routes').textContent = filtered.length + ' / ' + items.length + ' routes';
+        meta('routes').textContent = 'Showing ' + filtered.length + ' of ' + items.length + ' routes';
 
         body('routes').innerHTML = filtered.length === 0
             ? empty('No routes match.')
@@ -305,7 +305,8 @@
     function routeCard(route) {
         var issues = route.health && !route.health.ok
             ? '<div class="b-issues">' + route.health.issues.map(function (issue) {
-                return '<div class="b-issue">' + icon('warn') + '<span>' + esc(issue) + '</span></div>';
+                return '<div class="b-issue">' + icon('warn') + '<span>' + esc(issue) + '</span>' +
+                    '<button class="b-copy" data-copy="' + esc(issue) + '" title="Copy issue">' + icon('copy') + '</button></div>';
             }).join('') + '</div>'
             : '';
 
@@ -420,13 +421,18 @@
             { value: 'list', label: 'List', icon: 'list' },
             { value: 'graph', label: 'Graph', icon: 'graph' }
         ], function (value) { state.views.view = value; refresh('views'); });
+        if (state.views.view === 'graph') {
+            toggle('views', 'Isolated', state.views.isolated, function (value) {
+                state.views.isolated = value; refresh('views');
+            });
+        }
 
         var filtered = items.filter(function (view) {
             if (state.views.kind && view.kind !== state.views.kind) { return false; }
             return matches(state.views.query, [view.name, view.path, (view.used_by || []).join(' ')]);
         });
 
-        meta('views').textContent = filtered.length + ' / ' + items.length + ' views';
+        meta('views').textContent = 'Showing ' + filtered.length + ' of ' + items.length + ' views';
 
         if (filtered.length === 0) {
             body('views').innerHTML = empty('No views match.');
@@ -434,8 +440,24 @@
         }
 
         if (state.views.view === 'graph') {
-            body('views').innerHTML = '<div class="b-graph" data-graph></div>';
-            drawGraph(body('views').querySelector('[data-graph]'), data.graph, filtered);
+            var graph = data.graph || { nodes: [], edges: [] };
+            var degree = {};
+            (graph.edges || []).forEach(function (edge) { degree[edge.from] = 1; degree[edge.to] = 1; });
+
+            var visible = filtered;
+            var hidden = 0;
+            if (!state.views.isolated) {
+                visible = filtered.filter(function (view) { return degree[view.name]; });
+                hidden = filtered.length - visible.length;
+            }
+
+            var hint = hidden > 0
+                ? '<p class="b-hint">' + hidden + ' isolated view' + (hidden === 1 ? '' : 's') +
+                    ' hidden — toggle <strong>Isolated</strong> to include ' + (hidden === 1 ? 'it' : 'them') + '.</p>'
+                : '';
+
+            body('views').innerHTML = hint + '<div class="b-graph" data-graph></div>';
+            drawGraph(body('views').querySelector('[data-graph]'), graph, visible);
             return;
         }
 
@@ -580,7 +602,7 @@
             return matches(state.packages.query, [pkg.name, pkg.description, pkg.license]);
         });
 
-        meta('packages').textContent = filtered.length + ' / ' + items.length + ' packages';
+        meta('packages').textContent = 'Showing ' + filtered.length + ' of ' + items.length + ' packages';
 
         if (filtered.length === 0) {
             body('packages').innerHTML = empty('No packages match.');
@@ -630,7 +652,7 @@
             return matches(state.explore.query, [item.name, item.description, item.category, (item.tags || []).join(' ')]);
         });
 
-        meta('explore').textContent = filtered.length + ' / ' + explore.length + ' packages';
+        meta('explore').textContent = 'Showing ' + filtered.length + ' of ' + explore.length + ' packages';
 
         body('explore').innerHTML = filtered.length === 0
             ? empty('Nothing on the shelf matches.')

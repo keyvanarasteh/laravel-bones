@@ -89,6 +89,13 @@ class RouteProbe implements Probe
             return ['type' => 'closure', 'class' => null, 'method' => null, 'full' => null];
         }
 
+        // A route-cached application stores closures as serialized
+        // SerializableClosure objects (or their string form). They are not
+        // controllers, so never treat the blob as a class name.
+        if (is_object($handler) || (is_string($handler) && $this->isSerializedClosure($handler))) {
+            return ['type' => 'closure', 'class' => null, 'method' => null, 'full' => null];
+        }
+
         if (! is_string($handler) || $handler === '') {
             return ['type' => 'callable', 'class' => null, 'method' => null, 'full' => null];
         }
@@ -100,6 +107,16 @@ class RouteProbe implements Probe
         }
 
         return ['type' => 'invokable', 'class' => $handler, 'method' => '__invoke', 'full' => $handler];
+    }
+
+    /**
+     * A serialized closure surfaced by a route-cached application.
+     */
+    protected function isSerializedClosure(string $handler): bool
+    {
+        return str_contains($handler, 'SerializableClosure')
+            || str_contains($handler, 'Laravel\\SerializableClosure')
+            || (bool) preg_match('/^[OC]:\d+:"/', $handler);
     }
 
     /**

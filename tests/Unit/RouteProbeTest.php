@@ -53,6 +53,23 @@ class RouteProbeTest extends TestCase
         $this->assertStringContainsString('was not found', $route['health']['issues'][0]);
     }
 
+    public function test_it_treats_serialized_closures_as_closures(): void
+    {
+        $probe = new class($this->app->make(Router::class)) extends RouteProbe {
+            public function action(string $handler): array
+            {
+                return $this->parseAction($handler);
+            }
+        };
+
+        $serialized = 'O:55:"Laravel\\SerializableClosure\\SerializableClosure":1:{s:3:"use";a:0:{}}';
+        $parsed = $probe->action($serialized);
+
+        $this->assertSame('closure', $parsed['type']);
+        $this->assertNull($parsed['class']);
+        $this->assertNull($parsed['full']);
+    }
+
     public function test_it_hides_sensitive_routes(): void
     {
         config()->set('bones.routes.hide_sensitive', true);

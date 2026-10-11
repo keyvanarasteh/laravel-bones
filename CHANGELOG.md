@@ -4,6 +4,29 @@ All notable changes to **Laravel Bones** are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres
 to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.1] - 2026-10-11
+
+### Fixed
+
+- **Route health no longer cries wolf on a route-cached app.** Laravel stores
+  closures as serialized `SerializableClosure` blobs once routes are cached;
+  the probe treated that blob as a controller class and flagged every such
+  route as "controller not found", while the card printed the raw serialized
+  string as the action. Serialized closures are now recognised as closures and
+  the action reads `Closure`.
+- **The Views graph is visible again.** On a real project almost every view is
+  isolated (no `extends`/`includes`), and hundreds of them piled into a single
+  off-screen column, leaving the pane apparently blank. The graph now shows the
+  connected views by default, reports how many isolated views are hidden, and
+  offers an **Isolated** toggle to include them.
+- Route and view cards no longer stretch to the tallest card in the row, and
+  long action strings wrap instead of overflowing.
+
+### Added
+
+- A **copy** button on every route health issue, copying the issue text.
+- Clearer result counts — each tab now reads `Showing N of M`.
+
 ## [1.2.0] - 2026-10-11
 
 ### Changed
