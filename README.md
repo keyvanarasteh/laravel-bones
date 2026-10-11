@@ -14,6 +14,9 @@ and lays it out in one clean, searchable interface. Large codebases stop being
 guesswork: you can see what routes exist, how your Blade views knit together, and
 exactly which packages are holding the app up.
 
+
+![Laravel Bones](art/dashboard.png)
+
 ## What you get
 
 | Tab | What it shows |
