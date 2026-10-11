@@ -3,6 +3,7 @@
 namespace Keyvanarasteh\LaravelBones\Probes;
 
 use Illuminate\Filesystem\Filesystem;
+use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 use Keyvanarasteh\LaravelBones\Contracts\Probe;
 
@@ -63,7 +64,12 @@ class PackageProbe implements Probe
         }
 
         if ($items !== [] && config('bones.packages.check_security', true)) {
-            foreach ($this->advisories(array_keys($index)) as $name => $list) {
+            $versions = [];
+            foreach ($items as $item) {
+                $versions[$item['name']] = ltrim((string) ($item['version'] ?? ''), 'v');
+            }
+
+            foreach ($this->advisories($versions) as $name => $list) {
                 if (isset($index[$name])) {
                     $items[$index[$name]]['advisories'] = $list;
                 }
@@ -96,12 +102,15 @@ class PackageProbe implements Probe
     }
 
     /**
-     * @param  array<int, string>  $names
+     * Packagist returns every advisory for a package; keep only those whose
+     * affected-version constraint matches what is installed.
+     *
+     * @param  array<string, string>  $versions  package name => installed version
      * @return array<string, array<int, array<string, mixed>>>
      */
-    protected function advisories(array $names): array
+    protected function advisories(array $versions): array
     {
-        $names = array_values(array_filter($names, fn (string $name) => str_contains($name, '/')));
+        $names = array_values(array_filter(array_keys($versions), fn (string $name) => str_contains($name, '/')));
         $result = [];
 
         foreach (array_chunk($names, 50) as $chunk) {
@@ -116,13 +125,21 @@ class PackageProbe implements Probe
                 }
 
                 foreach (($response->json('advisories') ?? []) as $name => $list) {
-                    $result[$name] = array_map(fn (array $advisory) => [
-                        'id' => $advisory['advisoryId'] ?? null,
-                        'title' => $advisory['title'] ?? null,
-                        'cve' => $advisory['cve'] ?? null,
-                        'link' => $advisory['link'] ?? null,
-                        'severity' => strtolower((string) ($advisory['severity'] ?? '')),
-                    ], $list);
+                    $installed = (string) ($versions[$name] ?? '');
+                    $relevant = array_values(array_filter(
+                        $list,
+                        fn (array $advisory) => $this->affects($advisory['affectedVersions'] ?? null, $installed)
+                    ));
+
+                    if ($relevant !== []) {
+                        $result[$name] = array_map(fn (array $advisory) => [
+                            'id' => $advisory['advisoryId'] ?? null,
+                            'title' => $advisory['title'] ?? null,
+                            'cve' => $advisory['cve'] ?? null,
+                            'link' => $advisory['link'] ?? null,
+                            'severity' => strtolower((string) ($advisory['severity'] ?? '')),
+                        ], $relevant);
+                    }
                 }
             } catch (\Throwable) {
                 // Network is best-effort; a failure must never break the scan.
@@ -130,6 +147,23 @@ class PackageProbe implements Probe
         }
 
         return $result;
+    }
+
+    protected function affects(?string $constraint, string $version): bool
+    {
+        if ($constraint === null || $constraint === '' || $version === '') {
+            return true;
+        }
+
+        if (class_exists(\Composer\Semver\Semver::class)) {
+            try {
+                return \Composer\Semver\Semver::satisfies($version, $constraint);
+            } catch (\Throwable) {
+                return true;
+            }
+        }
+
+        return true;
     }
 
     /**
@@ -167,7 +201,7 @@ class PackageProbe implements Probe
         foreach ($names as $name) {
             $response = $responses[$name] ?? null;
 
-            if ($response === null || ! $response->successful()) {
+            if (! $response instanceof Response || ! $response->successful()) {
                 continue;
             }
 

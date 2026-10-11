@@ -103,13 +103,23 @@ class PackageProbeTest extends TestCase
 
         Http::fake([
             'packagist.org/api/security-advisories/*' => Http::response(['advisories' => [
-                'illuminate/support' => [[
-                    'advisoryId' => 'PKSA-1',
-                    'title' => 'Something dangerous',
-                    'cve' => 'CVE-2024-0001',
-                    'link' => 'https://example.com/advisory',
-                    'severity' => 'high',
-                ]],
+                'illuminate/support' => [
+                    [
+                        'advisoryId' => 'PKSA-1',
+                        'title' => 'Something dangerous',
+                        'cve' => 'CVE-2024-0001',
+                        'link' => 'https://example.com/advisory',
+                        'severity' => 'high',
+                        'affectedVersions' => '>=11.0,<11.4',
+                    ],
+                    [
+                        'advisoryId' => 'PKSA-2',
+                        'title' => 'Already fixed later',
+                        'cve' => 'CVE-2024-9999',
+                        'severity' => 'low',
+                        'affectedVersions' => '>=11.6',
+                    ],
+                ],
             ]], 200),
             'repo.packagist.org/p2/illuminate/support.json' => Http::response(['packages' => [
                 'illuminate/support' => [['version' => 'v11.5.0'], ['version' => 'v11.0.0']],
@@ -121,6 +131,8 @@ class PackageProbeTest extends TestCase
         $items = collect($data['items'])->keyBy('name');
 
         $this->assertSame('high', $items['illuminate/support']['severity']);
+        $this->assertCount(1, $items['illuminate/support']['advisories']);
+        $this->assertSame('PKSA-1', $items['illuminate/support']['advisories'][0]['id']);
         $this->assertSame('11.5.0', $items['illuminate/support']['latest']);
         $this->assertTrue($items['illuminate/support']['outdated']);
         $this->assertFalse($items['phpunit/phpunit']['outdated']);

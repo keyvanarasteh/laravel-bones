@@ -4,6 +4,19 @@ All notable changes to **Laravel Bones** are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres
 to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.1] - 2026-10-11
+
+### Fixed
+
+- Security advisories are now matched against the **installed version** using
+  each advisory's `affectedVersions` range (`composer/semver`, when present).
+  Packagist returns every advisory ever filed for a package, so without this a
+  patched package could be flagged with a dozen stale advisories — 48 packages
+  and 236 advisories became the 1 package that is genuinely affected.
+- A failed update request inside `Http::pool` yields a `ConnectionException`
+  rather than a response; the check now skips non-responses instead of
+  throwing on `->successful()`.
+
 ## [1.3.0] - 2026-10-11
 
 ### Added
