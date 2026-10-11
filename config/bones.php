@@ -1,0 +1,129 @@
+<?php
+
+return [
+
+    /*
+    |--------------------------------------------------------------------------
+    | Enabled
+    |--------------------------------------------------------------------------
+    |
+    | Bones is a development tool. It stays off in production unless you
+    | explicitly switch it on through the environment variable below.
+    |
+    */
+
+    'enabled' => env('BONES_ENABLED', false),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Route Prefix & Middleware
+    |--------------------------------------------------------------------------
+    |
+    | Where the dashboard lives and what guards it. Add "auth" or any custom
+    | middleware when you expose the dashboard outside of local development.
+    |
+    */
+
+    'route_prefix' => env('BONES_ROUTE_PREFIX', 'bones'),
+
+    'middleware' => ['web'],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Probes
+    |--------------------------------------------------------------------------
+    |
+    | Each probe inspects one facet of the application. Disable a probe to
+    | drop it from the dashboard, or append your own class that implements
+    | Keyvanarasteh\LaravelBones\Contracts\Probe.
+    |
+    */
+
+    'probes' => [
+        \Keyvanarasteh\LaravelBones\Probes\RouteProbe::class => true,
+        \Keyvanarasteh\LaravelBones\Probes\ViewProbe::class => true,
+        \Keyvanarasteh\LaravelBones\Probes\PackageProbe::class => true,
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Cache
+    |--------------------------------------------------------------------------
+    |
+    | Scanning routes, views and packages is cheap but not free. The result is
+    | cached for the given number of seconds; the dashboard offers a refresh
+    | button that clears it.
+    |
+    */
+
+    'cache' => [
+        'enabled' => env('BONES_CACHE', true),
+        'ttl' => env('BONES_CACHE_TTL', 600),
+        'key' => 'bones.skeleton',
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Routes
+    |--------------------------------------------------------------------------
+    */
+
+    'routes' => [
+        'hide_sensitive' => true,
+        'sensitive_patterns' => [
+            'telescope*',
+            'horizon*',
+            '_ignition*',
+            'sanctum/csrf-cookie',
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Views
+    |--------------------------------------------------------------------------
+    */
+
+    'views' => [
+        // Extra absolute paths to scan in addition to resource_path('views').
+        'paths' => [],
+
+        // Scan views exposed by packages through view()->addNamespace().
+        'include_namespaces' => true,
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Packages
+    |--------------------------------------------------------------------------
+    */
+
+    'packages' => [
+        // Also read package.json when it is present.
+        'include_npm' => true,
+
+        // Which installed packages are considered direct dependencies.
+        'mark_direct' => true,
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Explore
+    |--------------------------------------------------------------------------
+    |
+    | A curated shelf of packages worth knowing about. Bones cross-references
+    | these against your installed list so you can see, at a glance, what is
+    | already in play. Add your own entries with the same shape.
+    |
+    */
+
+    'explore' => [
+        // [
+        //     'name' => 'vendor/package',
+        //     'description' => 'What it does, in one line.',
+        //     'url' => 'https://github.com/vendor/package',
+        //     'category' => 'Testing',
+        //     'tags' => ['testing', 'quality'],
+        // ],
+    ],
+];

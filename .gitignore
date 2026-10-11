@@ -1,0 +1,13 @@
+/vendor/
+/node_modules/
+/composer.lock
+/package-lock.json
+/.phpunit.cache/
+/.phpunit.result.cache
+/.idea/
+/.vscode/
+/storage/
+*.log
+.DS_Store
+Thumbs.db
+.env
