@@ -4,6 +4,31 @@ All notable changes to **Laravel Bones** are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres
 to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2026-10-11
+
+### Changed
+
+- **Compact, professional UI** — a tighter header, smaller type scale, denser
+  cards, tables and toolbars, and a small icon set throughout, so the dashboard
+  fits far more on screen without losing legibility.
+- The **Routes tree** now renders expanded by default, shows per-node route
+  counts, and no longer repeats the URI segment as each row's label — rows show
+  the method, route name and action instead. Added **Expand/Collapse all**.
+- Filters gained a proper **segmented control** (Cards/Tree, List/Graph) and
+  checkbox-style toggles; every section shows `shown / total` counts.
+- Added keyboard shortcuts: `/` focuses the active search, `Esc` clears it.
+
+### Fixed
+
+- The **Views graph rendered empty** — nodes were matched against a key the
+  view items never had, so no node or edge was ever drawn.
+- The **theme toggle did nothing** — the switch was wired from a `<head>`
+  script before the button existed. Theme is now applied early (no flash) and
+  wired on boot; light/dark preference is persisted safely.
+- Copying now falls back to a selection-based copy when the async clipboard
+  API is unavailable (for example on plain HTTP).
+- The graph arrow marker now follows the theme instead of a hard-coded colour.
+
 ## [1.1.0] - 2026-10-11
 
 ### Added

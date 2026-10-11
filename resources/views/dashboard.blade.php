@@ -7,30 +7,18 @@
     <title>Laravel Bones</title>
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <script>
-        (function() {
-            var html = document.documentElement;
-            var savedTheme = localStorage.getItem('bones-theme');
-            var themeToggle = document.getElementById('theme-toggle');
-            
-            function updateTheme(theme) {
-                html.setAttribute('data-theme', theme);
-                localStorage.setItem('bones-theme', theme);
+        (function () {
+            var root = document.documentElement;
+            var theme;
+            try {
+                theme = localStorage.getItem('bones-theme');
+            } catch (e) {
+                theme = null;
             }
-            
-            if (!savedTheme) {
-                var prefersLight = window.matchMedia('(prefers-color-scheme: light)').matches;
-                updateTheme(prefersLight ? 'light' : 'dark');
-            } else {
-                updateTheme(savedTheme);
+            if (theme !== 'light' && theme !== 'dark') {
+                theme = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
             }
-            
-            if (themeToggle) {
-                themeToggle.addEventListener('click', function() {
-                    var current = html.getAttribute('data-theme');
-                    var next = current === 'dark' ? 'light' : 'dark';
-                    updateTheme(next);
-                });
-            }
+            root.setAttribute('data-theme', theme);
         })();
     </script>
     @include('bones::partials.styles')
@@ -38,101 +26,101 @@
 <body>
     @include('bones::partials.icons')
 
-    <div class="bones-shell">
-        <header class="bones-header">
-            <div class="bones-header__inner">
-                <div class="bones-brand">
-                    <span class="bones-brand__mark">
+    <div class="b-shell">
+        <header class="b-header">
+            <div class="b-header__inner">
+                <a class="b-brand" href="{{ route('bones.dashboard') }}">
+                    <span class="b-brand__mark">
                         <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-bone"></use></svg>
                     </span>
-                    <span class="bones-brand__text">
+                    <span class="b-brand__text">
                         <strong>Laravel Bones</strong>
-                        <small>a skeleton of this application</small>
+                        <small>skeleton of this application</small>
                     </span>
-                </div>
+                </a>
 
-                <nav class="bones-tabs" role="tablist" aria-label="Sections">
-                    <button class="bones-tab" role="tab" data-tab="overview" aria-selected="true">
+                <nav class="b-tabs" role="tablist" aria-label="Sections">
+                    <button class="b-tab" role="tab" data-tab="overview" aria-selected="true" title="Overview">
                         <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-grid"></use></svg>
-                        Overview
+                        <span>Overview</span>
                     </button>
                     @foreach ($skeleton as $section)
-                        <button class="bones-tab" role="tab" data-tab="{{ $section['key'] }}"
-                                aria-selected="false">
+                        <button class="b-tab" role="tab" data-tab="{{ $section['key'] }}"
+                                aria-selected="false" title="{{ $section['label'] }}">
                             <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-{{ $section['icon'] }}"></use></svg>
-                            {{ $section['label'] }}
-                            <span class="bones-tab__count" data-count="{{ $section['key'] }}">0</span>
+                            <span>{{ $section['label'] }}</span>
+                            <span class="b-tab__count" data-count="{{ $section['key'] }}">0</span>
                         </button>
                     @endforeach
-                    <button class="bones-tab" role="tab" data-tab="explore" aria-selected="false">
+                    <button class="b-tab" role="tab" data-tab="explore" aria-selected="false" title="Explore">
                         <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-sparkles"></use></svg>
-                        Explore
+                        <span>Explore</span>
                     </button>
                 </nav>
 
-                 <div class="bones-actions">
-                     <a class="bones-btn bones-btn--ghost" href="{{ route('bones.data') }}" target="_blank" rel="noopener">
-                         <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-code"></use></svg>
-                         JSON
-                     </a>
-                     <button class="bones-btn" id="theme-toggle" type="button">
-                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                             <circle cx="12" cy="12" r="5"/>
-                             <line x1="12" y1="1" x2="12" y2="3"/>
-                             <line x1="12" y1="21" x2="12" y2="23"/>
-                             <line x1="4" y1="12" x2="20" y2="12"/>
-                         </svg>
-                         Theme
-                     </button>
-                     <a class="bones-btn bones-btn--primary" href="?fresh=1">
-                         <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-refresh"></use></svg>
-                         Rescan
-                     </a>
-                 </div>
+                <div class="b-actions">
+                    <a class="b-btn b-btn--ghost" href="{{ route('bones.data') }}" target="_blank" rel="noopener" title="View raw JSON">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-code"></use></svg>
+                        <span class="b-btn__label">JSON</span>
+                    </a>
+                    <button class="b-btn b-btn--ghost b-theme" id="theme-toggle" type="button" title="Toggle theme" aria-label="Toggle theme">
+                        <svg class="b-theme__moon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-moon"></use></svg>
+                        <svg class="b-theme__sun" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-sun"></use></svg>
+                        <span class="b-btn__label">Theme</span>
+                    </button>
+                    <a class="b-btn b-btn--primary" href="?fresh=1" title="Rescan the application">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-refresh"></use></svg>
+                        <span class="b-btn__label">Rescan</span>
+                    </a>
+                </div>
             </div>
         </header>
 
-        <main class="bones-main">
-            <section class="bones-panel" data-panel="overview" role="tabpanel"></section>
+        <main class="b-main">
+            <section class="b-panel" data-panel="overview" role="tabpanel"></section>
 
             @foreach ($skeleton as $section)
-                <section class="bones-panel is-hidden" data-panel="{{ $section['key'] }}" role="tabpanel">
-                    <div class="bones-toolbar">
-                        <div class="bones-search">
+                <section class="b-panel is-hidden" data-panel="{{ $section['key'] }}" role="tabpanel">
+                    <div class="b-toolbar">
+                        <div class="b-search">
                             <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-search"></use></svg>
-                            <input type="search" data-search="{{ $section['key'] }}" placeholder="Filter {{ strtolower($section['label']) }}…" autocomplete="off">
+                            <input type="search" data-search="{{ $section['key'] }}" placeholder="Filter {{ strtolower($section['label']) }}…" autocomplete="off" spellcheck="false">
+                            <kbd class="b-kbd">/</kbd>
                         </div>
-                        <div class="bones-filters" data-filters="{{ $section['key'] }}"></div>
-                        <div class="bones-toolbar__meta" data-meta="{{ $section['key'] }}"></div>
+                        <div class="b-filters" data-filters="{{ $section['key'] }}"></div>
+                        <div class="b-toolbar__meta" data-meta="{{ $section['key'] }}"></div>
                     </div>
 
                     <div data-body="{{ $section['key'] }}"></div>
                 </section>
             @endforeach
 
-            <section class="bones-panel is-hidden" data-panel="explore" role="tabpanel">
-                <div class="bones-toolbar">
-                    <div class="bones-search">
+            <section class="b-panel is-hidden" data-panel="explore" role="tabpanel">
+                <div class="b-toolbar">
+                    <div class="b-search">
                         <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-search"></use></svg>
-                        <input type="search" data-search="explore" placeholder="Search the shelf…" autocomplete="off">
+                        <input type="search" data-search="explore" placeholder="Search the shelf…" autocomplete="off" spellcheck="false">
+                        <kbd class="b-kbd">/</kbd>
                     </div>
-                    <div class="bones-filters" data-filters="explore"></div>
-                    <div class="bones-toolbar__meta" data-meta="explore"></div>
+                    <div class="b-filters" data-filters="explore"></div>
+                    <div class="b-toolbar__meta" data-meta="explore"></div>
                 </div>
                 <div data-body="explore"></div>
             </section>
         </main>
 
-        <footer class="bones-footer">
+        <footer class="b-footer">
             <span>{{ count($skeleton) }} probes</span>
-            <span class="bones-dot">·</span>
+            <span class="b-dot">·</span>
             <a href="https://github.com/keyvanarasteh/laravel-bones" target="_blank" rel="noopener">keyvanarasteh/laravel-bones</a>
-            <span class="bones-dot">·</span>
+            <span class="b-dot">·</span>
             <span>MIT</span>
+            <span class="b-footer__spacer"></span>
+            <span class="b-hint"><kbd class="b-kbd">/</kbd> search <kbd class="b-kbd">esc</kbd> clear</span>
         </footer>
     </div>
 
-    <div class="bones-toast" data-toast hidden></div>
+    <div class="b-toast" data-toast hidden></div>
 
     <script type="application/json" id="bones-data">@json(['skeleton' => $skeleton, 'explore' => $explore])</script>
     @include('bones::partials.scripts')
